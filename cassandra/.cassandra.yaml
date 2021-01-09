@@ -1,0 +1,17 @@
+provider:
+  name: cassandra
+  params:
+    contact_points: "127.0.0.1"
+    port: "3306"
+    username: "cassandra"
+    password: "cassandra"
+
+executor:
+  params:
+    driver: com.mysql.jdbc.Driver
+    host: "127.0.0.1"
+    port: "3306"
+    username: root
+    password: root
+    database: executor
+    table: cassandra_migrations

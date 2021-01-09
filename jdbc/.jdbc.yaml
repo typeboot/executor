@@ -1,0 +1,18 @@
+provider:
+  name: jdbc
+  params:
+    driver: "com.mysql.jdbc.Driver"
+    host: "127.0.0.1"
+    port: "3306"
+    username: "root"
+    password: "root"
+
+executor:
+  params:
+    driver: com.mysql.jdbc.Driver
+    host: "127.0.0.1"
+    port: "3306"
+    username: root
+    password: root
+    database: executor
+    table: mysql_migrations
