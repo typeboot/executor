@@ -8,11 +8,16 @@ provider:
     password: "password"
 
 executor:
-  params:
-    driver: com.postgresql.Driver
-    host: "127.0.0.1"
-    port: "5432"
-    username: postgres
-    password: password
-    database: executor
-    table: mysql_migrations
+  source: "$HOME/dev/projects/data-pipelines/typeboot/typeboot-spec/output/cql"
+  provider:
+    name: core
+    extension: "sql"
+    params:
+      driver: org.postgresql.Driver
+      host: "127.0.0.1"
+      port: "5432"
+      username: postgres
+      password: password
+      schema: executor
+      table: cassandra_migrations
+      app_name: "core"

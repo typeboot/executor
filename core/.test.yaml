@@ -1,13 +1,19 @@
 provider:
   name: test
+  extension: "cql"
   params: { }
 
 executor:
-  params:
-    driver: com.mysql.com.typeboot.executor.jdbc.Driver
-    host: "127.0.0.1"
-    port: "3306"
-    username: root
-    password: root
-    database: executor
-    table: cassandra_migrations
+  source: "$HOME/dev/projects/data-pipelines/typeboot/typeboot-spec/output/cql"
+  provider:
+    name: test
+    extension: "sql"
+    params:
+      driver: org.postgresql.Driver
+      host: "127.0.0.1"
+      port: "5432"
+      username: postgres
+      password: password
+      schema: executor
+      table: cassandra_migrations
+      app_name: "core"

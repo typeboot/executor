@@ -1,5 +1,6 @@
 package com.typeboot.executor.spi.test
 
+import com.typeboot.executor.core.Runners
 import com.typeboot.executor.core.Init
 import com.typeboot.executor.spi.model.ScriptStatement
 
@@ -8,4 +9,5 @@ fun main() {
     val result = executor.executeStatement(ScriptStatement(1, "1-create-table.sql",
             "create table a(name text)"))
     println("execution result $result")
+    Runners.process(".test.yaml")
 }

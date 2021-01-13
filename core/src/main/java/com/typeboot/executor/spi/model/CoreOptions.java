@@ -3,22 +3,30 @@ package com.typeboot.executor.spi.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Map;
-
 public class CoreOptions {
-    private final Map<String, String> params;
+    private final String source;
+    private final ProviderOptions provider;
 
     @JsonCreator
-    public CoreOptions(@JsonProperty("params") Map<String, String> params) {
-        this.params = params;
+    public CoreOptions(@JsonProperty("source") String source,
+                       @JsonProperty("provider") ProviderOptions provider) {
+        this.source = source;
+        this.provider = provider;
     }
 
     public String getString(String key) {
-        return this.params.get(key);
+        return this.provider.getString(key);
     }
 
     public Integer getInt(String key) {
         return Integer.parseInt(getString(key));
     }
 
+    public String getSource() {
+        return source;
+    }
+
+    public ProviderOptions getProvider() {
+        return provider;
+    }
 }
