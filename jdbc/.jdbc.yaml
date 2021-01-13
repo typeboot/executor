@@ -1,18 +1,18 @@
 provider:
   name: jdbc
   params:
-    driver: "com.mysql.jdbc.Driver"
+    driver: "com.postgresql.Driver"
     host: "127.0.0.1"
-    port: "3306"
-    username: "root"
-    password: "root"
+    port: "5432"
+    username: "postgres"
+    password: "password"
 
 executor:
   params:
-    driver: com.mysql.jdbc.Driver
+    driver: com.postgresql.Driver
     host: "127.0.0.1"
-    port: "3306"
-    username: root
-    password: root
+    port: "5432"
+    username: postgres
+    password: password
     database: executor
     table: mysql_migrations
