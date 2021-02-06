@@ -27,6 +27,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.3.7")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.3.7")
 
+    implementation("org.postgresql:postgresql:42.2.18")
+    implementation("mysql:mysql-connector-java:8.0.22")
+
     implementation("io.projectreactor.addons:reactor-adapter:3.3.2.RELEASE")
     testImplementation("io.projectreactor:reactor-test:3.3.2.RELEASE")
     testImplementation("org.mockito:mockito-core:3.3.3")

@@ -1,7 +1,9 @@
 provider:
   name: test
   extension: "cql"
-  params: { }
+  params:
+    database: executor
+    table: cassandra_migrations
 
 executor:
   source: "$HOME/dev/projects/data-pipelines/typeboot/typeboot-spec/output/cql"
@@ -14,6 +16,4 @@ executor:
       port: "5432"
       username: postgres
       password: password
-      schema: executor
-      table: cassandra_migrations
       app_name: "core"

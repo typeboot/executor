@@ -1,23 +1,27 @@
 provider:
   name: jdbc
+  extension: "sql"
+  separator: ";"
   params:
-    driver: "com.postgresql.Driver"
+    driver: "org.postgresql.Driver"
     host: "127.0.0.1"
     port: "5432"
     username: "postgres"
     password: "password"
+    database: executor
+    table: jdbc_migrations
 
 executor:
-  source: "$HOME/dev/projects/data-pipelines/typeboot/typeboot-spec/output/cql"
+  source: "$HOME/dev/projects/data-pipelines/typeboot/typeboot-spec/output/sql"
   provider:
-    name: core
+    name: jdbc
     extension: "sql"
+    separator: ";"
     params:
       driver: org.postgresql.Driver
       host: "127.0.0.1"
       port: "5432"
       username: postgres
       password: password
-      schema: executor
-      table: cassandra_migrations
       app_name: "core"
+      team_name: "default"

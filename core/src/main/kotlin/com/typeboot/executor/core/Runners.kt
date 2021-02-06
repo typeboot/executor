@@ -21,12 +21,11 @@ class DefaultRunner(private val instance: ScriptExecutor,
                     private val listener: ExecutionEventListener) {
 
     fun run(scripts: List<FileScript>, separator: String) {
-        listener.beforeAll()
         var summary = Summary().copy(totalScripts = scripts.size)
         scripts.forEach { script ->
-            listener.beforeScriptStart(script)
             val fileContent = File(script.filePath).bufferedReader().readLines().joinToString("\n")
-            val statements = fileContent.split("$separator\\b")
+            listener.beforeScriptStart(script, fileContent)
+            val statements = fileContent.split("$separator").filter { st -> st.trim().isNotEmpty() }
             statements.forEach { statement ->
                 val scriptStatement = ScriptStatement(script.serial, script.name, statement)
                 listener.beforeStatement(script, scriptStatement)
@@ -42,7 +41,7 @@ class DefaultRunner(private val instance: ScriptExecutor,
                 listener.afterStatement(script, scriptStatement, statementResult)
                 summary = summary.copy(statements = summary.statements + 1)
             }
-            listener.afterScriptEnd(script)
+            listener.afterScriptEnd(script, statements.size)
             summary = summary.copy(scripts = summary.scripts + 1)
         }
         listener.afterAll(summary.copy(result = true))
@@ -57,20 +56,23 @@ class Runners {
 
             val providerExecutor = Init.executorInstance(executorConfig.provider.name, executorConfig.provider)
 
-            val scripts = FileScripts.fromSource(executorConfig.executor.source, executorConfig.provider.extension)
+            val source = executorConfig.executor.source.replace("\$HOME", System.getProperty("user.home"), true)
+            val scripts = FileScripts.fromSource(source, executorConfig.provider.extension)
 
             val executorProvider = executorConfig.executor.provider
             val tracker = Init.executorInstance(executorProvider.name, executorProvider)
             val coreListener = CoreExecutionEventListener(
-                    tracker, executorProvider
+                    tracker, executorConfig.provider, executorProvider
             )
 
             val listeners = listOf<ExecutionEventListener>()
             val wrappedListeners = WrapperExecutionListener(
                     listOf(coreListener, WrapperExecutionListener(listeners, true)))
 
-            val alreadyRun = DefaultWatermarkService(executorConfig.provider).watermark(executorProvider.getString("app_name"))
-            val scriptsToRun = scripts.dropWhile { f -> f.serial < alreadyRun }
+            wrappedListeners.beforeAll()
+            val alreadyRun = DefaultWatermarkService(tracker, executorConfig.provider).watermark(executorProvider.getString("app_name"))
+            val scriptsToRun = scripts.filter { f -> f.serial > alreadyRun }
+            println("total scripts ${scripts.size}, selected for run: ${scriptsToRun.size}")
             DefaultRunner(providerExecutor, wrappedListeners).run(scriptsToRun, executorConfig.provider.separator)
         }
     }

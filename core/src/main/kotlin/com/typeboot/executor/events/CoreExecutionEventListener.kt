@@ -12,17 +12,20 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-class CoreExecutionEventListener(private val scriptExecutor: ScriptExecutor, private val provider: ProviderOptions) : ExecutionEventListener, ScriptWatermark {
+class CoreExecutionEventListener(private val scriptExecutor: ScriptExecutor, trackerOptions: ProviderOptions, private val provider: ProviderOptions) : ExecutionEventListener {
 
-    private val schema = provider.getString("database")
-    private val table = provider.getString("table")
+    private val schema = trackerOptions.getString("database")
+    private val table = trackerOptions.getString("table")
     private val appName = provider.getString("app_name")
     private val batchNo = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now())
+    private val team = provider.getString("team_name")
 
     override fun beforeAll() {
         if (provider.name != "jdbc") {
             throw RuntimeException("only jdbc provider is supported for tracker")
         }
+        scriptExecutor.executeStatement(ScriptStatement(1, "", "create schema if not exists $schema"))
+
         scriptExecutor.executeStatement(
                 ScriptStatement(1, "", """create table if not exists $schema.$table(
                     |app_name text not null,
@@ -53,11 +56,11 @@ class CoreExecutionEventListener(private val scriptExecutor: ScriptExecutor, pri
             |)""".trimMargin()))
     }
 
-    override fun beforeScriptStart(fileScript: FileScript) {
+    override fun beforeScriptStart(fileScript: FileScript, content: String) {
         val insert = createInserts(
                 table,
-                listOf("app_name", "script_id", "script_name", "batch_no", "status", "executed"),
-                listOf(appName, fileScript.serial, fileScript.name, batchNo, "PROGRESS", LocalDateTime.now())
+                listOf("app_name", "script_id", "script_name", "batch_no", "status", "executed", "team", "statements", "content"),
+                listOf(appName, fileScript.serial, fileScript.name, batchNo, "PROGRESS", LocalDateTime.now(), team, 0, content)
         )
         scriptExecutor.executeStatement(ScriptStatement(1, "", insert))
     }
@@ -79,7 +82,7 @@ class CoreExecutionEventListener(private val scriptExecutor: ScriptExecutor, pri
     private fun createUpdate(tableName: String, setMap: Map<String, Any>, selectMap: Map<String, Any>): String {
         val setCols = columnValues(setMap, ", ")
         val selectCols = columnValues(selectMap, " AND ")
-        return "update $schema.$tableName $setCols WHERE $selectCols"
+        return "update $schema.$tableName SET $setCols WHERE $selectCols"
     }
 
     private fun columnValues(setMap: Map<String, Any>, sep: String) =
@@ -128,11 +131,12 @@ class CoreExecutionEventListener(private val scriptExecutor: ScriptExecutor, pri
         after(table, abortMap, fileScript)
     }
 
-    override fun afterScriptEnd(fileScript: FileScript) {
+    override fun afterScriptEnd(fileScript: FileScript, statements: Int) {
         val status = "DONE"
         val afterMap = mapOf(
                 "status" to status,
-                "executed" to LocalDateTime.now()
+                "executed" to LocalDateTime.now(),
+                "statements" to statements
         )
         after(table, afterMap, fileScript)
     }
@@ -140,15 +144,11 @@ class CoreExecutionEventListener(private val scriptExecutor: ScriptExecutor, pri
     override fun afterAll(summary: Summary) {
         val status = if (summary.result) "DONE" else "ERROR"
         val insert = createInserts(
-                table,
+                "${table}_runs",
                 listOf("app_name", "batch_no", "status", "files", "statements", "total_scripts", "executed"),
                 listOf(appName, batchNo, status, summary.scripts, summary.statements, summary.totalScripts, LocalDateTime.now())
         )
         scriptExecutor.executeStatement(ScriptStatement(1, "", insert))
     }
 
-    override fun watermark(appName: String): Int {
-        scriptExecutor.executeStatement(ScriptStatement(1, "", ""))
-        return 1
-    }
 }
