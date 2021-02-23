@@ -7,7 +7,7 @@ data class FileScript(val serial: Int, val name: String, val filePath: String)
 
 class FileScripts {
     companion object {
-        private fun pattern(ext: String): Pattern = Pattern.compile("([0-9]+).*\\.$ext")
+        private fun pattern(ext: String): Pattern = Pattern.compile("[V]?([0-9]+).*\\.$ext")
 
         fun fromSource(source: String, ext: String): List<FileScript> {
             val reg = pattern(ext)
