@@ -16,6 +16,9 @@ class TestScriptExecutor : ScriptExecutor {
     override fun queryForObject(stmt: ScriptStatement?, rowMapper: RowMapper?): Any {
         return ""
     }
+
+    override fun shutdown() {
+    }
 }
 
 class ScriptExecutorFactoryTest : ScriptExecutorFactory {

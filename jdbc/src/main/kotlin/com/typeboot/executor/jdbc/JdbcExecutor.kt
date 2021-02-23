@@ -56,4 +56,10 @@ class JdbcExecutor(provider: ProviderOptions) : ScriptExecutor {
         }
         return null
     }
+
+    override fun shutdown() {
+        if (!this.conn.isClosed) {
+            this.conn.close()
+        }
+    }
 }

@@ -9,4 +9,10 @@ metadata and target mutation files.
 ### build & run
 ```
 ./run.sh $(pwd)/jdbc/.jdbc.yaml
+./run.sh $(pwd)/cassandra/.cassandra.yaml
+```
+
+### Running it from IDE
+```
+com.typeboot.main(arrayOf(".db.yaml"))
 ```

@@ -1,4 +1,4 @@
-provider:
+tracker:
   name: jdbc
   extension: "sql"
   separator: ";"
@@ -10,6 +10,8 @@ provider:
     password: "password"
     database: executor
     table: jdbc_migrations
+    app_name: "core"
+    team_name: "default"
 
 executor:
   source: "$HOME/dev/projects/data-pipelines/typeboot/typeboot-spec/output/sql"
@@ -23,5 +25,4 @@ executor:
       port: "5432"
       username: postgres
       password: password
-      app_name: "core"
-      team_name: "default"
+

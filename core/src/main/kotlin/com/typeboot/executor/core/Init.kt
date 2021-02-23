@@ -11,7 +11,7 @@ class Init {
     companion object {
         fun create(fileName: String = ".executor.yaml"): ScriptExecutor {
             val executorConfig = YamlSupport().toInstance(fileName, ExecutorConfig::class.java)
-            return executorInstance(executorConfig.provider.name, executorConfig.provider)
+            return executorInstance(executorConfig.tracker.name, executorConfig.tracker)
         }
 
         fun executorInstance(name: String, provider: ProviderOptions): ScriptExecutor {

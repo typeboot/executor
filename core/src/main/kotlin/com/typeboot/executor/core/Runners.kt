@@ -4,10 +4,7 @@ import com.typeboot.dataformat.config.YamlSupport
 import com.typeboot.dataformat.scripts.FileScript
 import com.typeboot.dataformat.scripts.FileScripts
 import com.typeboot.exceptions.ScriptExecutionException
-import com.typeboot.executor.events.CoreExecutionEventListener
-import com.typeboot.executor.events.DefaultWatermarkService
-import com.typeboot.executor.events.ExecutionEventListener
-import com.typeboot.executor.events.WrapperExecutionListener
+import com.typeboot.executor.events.*
 import com.typeboot.executor.spi.ScriptExecutor
 import com.typeboot.executor.spi.model.ExecutorConfig
 import com.typeboot.executor.spi.model.ScriptStatement
@@ -26,6 +23,7 @@ class DefaultRunner(private val instance: ScriptExecutor,
             val fileContent = File(script.filePath).bufferedReader().readLines().joinToString("\n")
             listener.beforeScriptStart(script, fileContent)
             val statements = fileContent.split("$separator").filter { st -> st.trim().isNotEmpty() }
+            println("statements ${statements.size}")
             statements.forEach { statement ->
                 val scriptStatement = ScriptStatement(script.serial, script.name, statement)
                 listener.beforeStatement(script, scriptStatement)
@@ -53,27 +51,30 @@ class Runners {
     companion object {
         fun process(entryFile: String) {
             val executorConfig = YamlSupport().toInstance(entryFile, ExecutorConfig::class.java)
+            val trackerOptions = executorConfig.tracker
+            val trackerExecutor = Init.executorInstance(executorConfig.tracker.name, trackerOptions)
 
-            val providerExecutor = Init.executorInstance(executorConfig.provider.name, executorConfig.provider)
-
-            val source = executorConfig.executor.source.replace("\$HOME", System.getProperty("user.home"), true)
-            val scripts = FileScripts.fromSource(source, executorConfig.provider.extension)
-
-            val executorProvider = executorConfig.executor.provider
-            val tracker = Init.executorInstance(executorProvider.name, executorProvider)
-            val coreListener = CoreExecutionEventListener(
-                    tracker, executorConfig.provider, executorProvider
-            )
+            val coreListener = CoreExecutionEventListener(trackerExecutor, trackerOptions)
 
             val listeners = listOf<ExecutionEventListener>()
             val wrappedListeners = WrapperExecutionListener(
                     listOf(coreListener, WrapperExecutionListener(listeners, true)))
 
             wrappedListeners.beforeAll()
-            val alreadyRun = DefaultWatermarkService(tracker, executorConfig.provider).watermark(executorProvider.getString("app_name"))
+
+            val itemOptions = executorConfig.executor.provider
+            val source = executorConfig.executor.source.replace("\$HOME", System.getProperty("user.home"), true)
+            val scripts = FileScripts.fromSource(source, itemOptions.extension)
+
+            val alreadyRun = DefaultWatermarkService(trackerExecutor, trackerOptions).watermark(trackerOptions.getString("app_name"))
             val scriptsToRun = scripts.filter { f -> f.serial > alreadyRun }
             println("total scripts ${scripts.size}, selected for run: ${scriptsToRun.size}")
-            DefaultRunner(providerExecutor, wrappedListeners).run(scriptsToRun, executorConfig.provider.separator)
+            if (scriptsToRun.isNotEmpty()) {
+                val itemExecutor = Init.executorInstance(itemOptions.name, itemOptions)
+                DefaultRunner(itemExecutor, wrappedListeners).run(scriptsToRun, itemOptions.separator)
+                itemExecutor.shutdown();
+            }
+            trackerExecutor.shutdown();
         }
     }
 }

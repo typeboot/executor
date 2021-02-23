@@ -12,21 +12,21 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-class CoreExecutionEventListener(private val scriptExecutor: ScriptExecutor, trackerOptions: ProviderOptions, private val provider: ProviderOptions) : ExecutionEventListener {
+class CoreExecutionEventListener(private val trackerExecutor: ScriptExecutor, private val trackerOptions: ProviderOptions) : ExecutionEventListener {
 
     private val schema = trackerOptions.getString("database")
     private val table = trackerOptions.getString("table")
-    private val appName = provider.getString("app_name")
+    private val appName = trackerOptions.getString("app_name")
     private val batchNo = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now())
-    private val team = provider.getString("team_name")
+    private val team = trackerOptions.getString("team_name")
 
     override fun beforeAll() {
-        if (provider.name != "jdbc") {
+        if (trackerOptions.name != "jdbc") {
             throw RuntimeException("only jdbc provider is supported for tracker")
         }
-        scriptExecutor.executeStatement(ScriptStatement(1, "", "create schema if not exists $schema"))
+        trackerExecutor.executeStatement(ScriptStatement(1, "", "create schema if not exists $schema"))
 
-        scriptExecutor.executeStatement(
+        trackerExecutor.executeStatement(
                 ScriptStatement(1, "", """create table if not exists $schema.$table(
                     |app_name text not null,
                     |version text,
@@ -44,7 +44,7 @@ class CoreExecutionEventListener(private val scriptExecutor: ScriptExecutor, tra
                     |primary key(app_name, script_id, script_name, batch_no)
                     |)""".trimMargin())
         )
-        scriptExecutor.executeStatement(ScriptStatement(1, "", """create table if not exists $schema.${table}_runs(
+        trackerExecutor.executeStatement(ScriptStatement(1, "", """create table if not exists $schema.${table}_runs(
             |app_name text not null,
             |batch_no text not null,
             |executed timestamp not null,
@@ -60,9 +60,9 @@ class CoreExecutionEventListener(private val scriptExecutor: ScriptExecutor, tra
         val insert = createInserts(
                 table,
                 listOf("app_name", "script_id", "script_name", "batch_no", "status", "executed", "team", "statements", "content"),
-                listOf(appName, fileScript.serial, fileScript.name, batchNo, "PROGRESS", LocalDateTime.now(), team, 0, content)
+                listOf(appName, fileScript.serial, fileScript.name, batchNo, "PROGRESS", LocalDateTime.now(), team, 0, content.replace("'","''"))
         )
-        scriptExecutor.executeStatement(ScriptStatement(1, "", insert))
+        trackerExecutor.executeStatement(ScriptStatement(1, "", insert))
     }
 
     private fun createInserts(tableName: String, cols: List<String>, params: List<Any>): String {
@@ -118,7 +118,7 @@ class CoreExecutionEventListener(private val scriptExecutor: ScriptExecutor, tra
                         "batch_no" to batchNo
                 )
         )
-        scriptExecutor.executeStatement(ScriptStatement(1, "", update))
+        trackerExecutor.executeStatement(ScriptStatement(1, "", update))
     }
 
     override fun onAbortScript(fileScript: FileScript, th: Throwable) {
@@ -148,7 +148,7 @@ class CoreExecutionEventListener(private val scriptExecutor: ScriptExecutor, tra
                 listOf("app_name", "batch_no", "status", "files", "statements", "total_scripts", "executed"),
                 listOf(appName, batchNo, status, summary.scripts, summary.statements, summary.totalScripts, LocalDateTime.now())
         )
-        scriptExecutor.executeStatement(ScriptStatement(1, "", insert))
+        trackerExecutor.executeStatement(ScriptStatement(1, "", insert))
     }
 
 }
