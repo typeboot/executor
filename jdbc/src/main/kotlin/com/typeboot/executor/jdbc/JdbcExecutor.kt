@@ -19,10 +19,10 @@ class JdbcExecutor(provider: ProviderOptions) : ScriptExecutor {
     private var conn: Connection
 
     init {
-        val username = getStringOrThrow(provider, "username")
-        val password = getStringOrThrow(provider, "password")
-        val port = getStringOrThrow(provider, "port")
-        val host = getStringOrThrow(provider, "host")
+        val username = provider.getString("username");
+        val password = provider.getPassword("password");
+        val port = provider.getInt("port");
+        val host = provider.getString("host");
 
         val props = Properties().apply {
             setProperty("user", "$username")

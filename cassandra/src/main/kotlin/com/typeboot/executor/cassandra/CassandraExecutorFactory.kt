@@ -11,7 +11,7 @@ class CassandraExecutorFactory : ScriptExecutorFactory {
     override fun create(provider: ProviderOptions): ScriptExecutor {
 
         val username = provider.getString("username")
-        val password = provider.getString("password")
+        val password = provider.getPassword("password")
         val port = provider.getInt("port")
         val host = provider.getString("contact_points").split(",").map { InetSocketAddress(it.trim(), port) }
         val ssl = provider.getString("ssl").toBoolean()
