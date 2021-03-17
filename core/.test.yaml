@@ -2,7 +2,7 @@ provider:
   name: test
   extension: "cql"
   params:
-    database: executor
+    schema: executor
     table: cassandra_migrations
 
 executor:
@@ -17,3 +17,6 @@ executor:
       username: postgres
       password: password
       app_name: "core"
+
+vars:
+  schema: "test123"

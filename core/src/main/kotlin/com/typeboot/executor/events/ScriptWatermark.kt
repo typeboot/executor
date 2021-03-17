@@ -13,7 +13,7 @@ interface ScriptWatermark {
 class DefaultWatermarkService(private val queryExecutor: ScriptExecutor, private val providerOptions: ProviderOptions) : ScriptWatermark {
     override fun watermark(appName: String): Int {
         val table = providerOptions.getString("table")
-        val schema = providerOptions.getString("database")
+        val schema = providerOptions.getString("schema")
 
         val hasIncomplete = queryExecutor.queryForObject(ScriptStatement(1, "",
                 "select count(script_id) from $schema.$table where app_name='%s' AND status='%s'".format(appName, "PROGRESS"))

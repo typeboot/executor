@@ -12,9 +12,6 @@ import java.util.*
 
 class JdbcExecutor(provider: ProviderOptions) : ScriptExecutor {
 
-    private fun getStringOrThrow(provider: ProviderOptions, param: String): String {
-        return provider.getString(param) ?: throw RuntimeException("requires $param")
-    }
 
     private var conn: Connection
 
@@ -23,13 +20,14 @@ class JdbcExecutor(provider: ProviderOptions) : ScriptExecutor {
         val password = provider.getPassword("password");
         val port = provider.getInt("port");
         val host = provider.getString("host");
+        val database = provider.getString("database", "postgres");
 
         val props = Properties().apply {
             setProperty("user", "$username")
             setProperty("password", "$password")
         }
-        Class.forName(getStringOrThrow(provider, "driver"))
-        this.conn = DriverManager.getConnection("jdbc:postgresql://$host:$port/", props)
+        Class.forName(provider.getString("driver"))
+        this.conn = DriverManager.getConnection("jdbc:postgresql://$host:$port/$database", props)
         println("DB initialisation")
     }
 

@@ -9,18 +9,25 @@ import com.typeboot.executor.spi.ScriptExecutor
 import com.typeboot.executor.spi.model.ExecutorConfig
 import com.typeboot.executor.spi.model.ScriptStatement
 import java.io.File
+import java.util.regex.Pattern
 
 data class Summary(val totalScripts: Int, val scripts: Int, val statements: Int, val result: Boolean) {
     constructor() : this(0, 0, 0, false)
 }
 
 class DefaultRunner(private val instance: ScriptExecutor,
-                    private val listener: ExecutionEventListener) {
+                    private val listener: ExecutionEventListener,
+                    private val variables: Map<String, String>) {
 
     fun run(scripts: List<FileScript>, separator: String) {
         var summary = Summary().copy(totalScripts = scripts.size)
         scripts.forEach { script ->
-            val fileContent = File(script.filePath).bufferedReader().readLines().joinToString("\n")
+            var fileContent = File(script.filePath).bufferedReader().readLines().joinToString("\n")
+            variables.forEach{(key, value) ->
+                val regexStr = "\\{\\{\\s?$key\\s?\\}\\}"
+                val variablePattern = Regex(regexStr)
+                fileContent = fileContent.replace(variablePattern, value)
+            }
             listener.beforeScriptStart(script, fileContent)
             val statements = fileContent.split("$separator").filter { st -> st.trim().isNotEmpty() }
             println("statements ${statements.size}")
@@ -71,7 +78,7 @@ class Runners {
             println("total scripts ${scripts.size}, selected for run: ${scriptsToRun.size}")
             if (scriptsToRun.isNotEmpty()) {
                 val itemExecutor = Init.executorInstance(itemOptions.name, itemOptions)
-                DefaultRunner(itemExecutor, wrappedListeners).run(scriptsToRun, itemOptions.separator)
+                DefaultRunner(itemExecutor, wrappedListeners, executorConfig.vars).run(scriptsToRun, itemOptions.separator)
                 itemExecutor.shutdown();
             }
             trackerExecutor.shutdown();

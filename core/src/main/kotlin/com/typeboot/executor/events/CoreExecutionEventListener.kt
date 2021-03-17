@@ -14,7 +14,7 @@ import java.util.*
 
 class CoreExecutionEventListener(private val trackerExecutor: ScriptExecutor, private val trackerOptions: ProviderOptions) : ExecutionEventListener {
 
-    private val schema = trackerOptions.getString("database")
+    private val schema = trackerOptions.getString("schema")
     private val table = trackerOptions.getString("table")
     private val appName = trackerOptions.getString("app_name")
     private val batchNo = DateTimeFormatter.ofPattern("yyyyMMddHHmmss").format(LocalDateTime.now())

@@ -8,7 +8,8 @@ tracker:
     port: "5432"
     username: "postgres"
     password: "password"
-    database: executor
+    database: "postgres"
+    schema: executor
     table: jdbc_migrations
     app_name: "core"
     team_name: "default"
@@ -26,3 +27,5 @@ executor:
       username: postgres
       password: password
 
+vars:
+  schema_name: "customer"
