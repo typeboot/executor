@@ -27,7 +27,9 @@ class JdbcExecutor(provider: ProviderOptions) : ScriptExecutor {
             setProperty("password", "$password")
         }
         Class.forName(provider.getString("driver"))
-        this.conn = DriverManager.getConnection("jdbc:postgresql://$host:$port/$database", props)
+        val url = "jdbc:postgresql://$host:$port/$database"
+        println("url $url")
+        this.conn = DriverManager.getConnection(url, props)
         println("DB initialisation")
     }
 
