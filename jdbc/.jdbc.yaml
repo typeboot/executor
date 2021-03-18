@@ -13,6 +13,7 @@ tracker:
     table: jdbc_migrations
     app_name: "core"
     team_name: "default"
+    create_schema: "true"
 
 executor:
   source: "$HOME/dev/projects/data-pipelines/typeboot/typeboot-spec/output/sql"

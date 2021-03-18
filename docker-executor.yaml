@@ -11,6 +11,7 @@ provider:
     database: postgres
     schema: executor
     table: jdbc_migrations
+    create_schema: "true"
 
 executor:
   source: "/opt/app/data/sql"

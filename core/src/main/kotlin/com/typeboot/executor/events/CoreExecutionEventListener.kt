@@ -24,8 +24,10 @@ class CoreExecutionEventListener(private val trackerExecutor: ScriptExecutor, pr
         if (trackerOptions.name != "jdbc") {
             throw RuntimeException("only jdbc provider is supported for tracker")
         }
-        trackerExecutor.executeStatement(ScriptStatement(1, "", "create schema if not exists $schema"))
-
+        val createSchema = trackerOptions.getString("create_schema", "true").toBoolean()
+        if (createSchema) {
+            trackerExecutor.executeStatement(ScriptStatement(1, "", "create schema if not exists $schema"))
+        }
         trackerExecutor.executeStatement(
                 ScriptStatement(1, "", """create table if not exists $schema.$table(
                     |app_name text not null,
