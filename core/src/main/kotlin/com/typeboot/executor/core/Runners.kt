@@ -23,7 +23,7 @@ class DefaultRunner(private val instance: ScriptExecutor,
         var summary = Summary().copy(totalScripts = scripts.size)
         scripts.forEach { script ->
             var fileContent = File(script.filePath).bufferedReader().readLines().joinToString("\n")
-            variables.forEach{(key, value) ->
+            variables.forEach { (key, value) ->
                 val regexStr = "\\{\\{\\s?$key\\s?\\}\\}"
                 val variablePattern = Regex(regexStr)
                 fileContent = fileContent.replace(variablePattern, value)
@@ -73,8 +73,17 @@ class Runners {
             val source = executorConfig.executor.source.replace("\$HOME", System.getProperty("user.home"), true)
             val scripts = FileScripts.fromSource(source, itemOptions.extension)
 
-            val alreadyRun = DefaultWatermarkService(trackerExecutor, trackerOptions).watermark(trackerOptions.getString("app_name"))
-            val scriptsToRun = scripts.filter { f -> f.serial > alreadyRun }
+            val watermark = DefaultWatermarkService(trackerExecutor, trackerOptions).watermark(trackerOptions.getString("app_name"))
+            if (watermark.value < 0) {
+                val ignoreUncleanState = executorConfig.tracker.getString("ignore_unclean_state", "false").toBoolean()
+                if (ignoreUncleanState) {
+                    println("ignore_unclean_state is true. will retry execution by ignoring existing in PROGRESS items.")
+                } else {
+                    throw (watermark.exception?.let(::Exception) ?: RuntimeException("previous progress check failed."))
+                }
+            }
+
+            val scriptsToRun = scripts.filter { f -> f.serial > watermark.value }
             println("total scripts ${scripts.size}, selected for run: ${scriptsToRun.size}")
             if (scriptsToRun.isNotEmpty()) {
                 val itemExecutor = Init.executorInstance(itemOptions.name, itemOptions)

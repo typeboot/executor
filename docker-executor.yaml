@@ -12,6 +12,7 @@ provider:
     schema: executor
     table: jdbc_migrations
     create_schema: "true"
+    ignore_unclean_state: "false"
 
 executor:
   source: "/opt/app/data/sql"

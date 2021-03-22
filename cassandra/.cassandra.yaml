@@ -12,6 +12,8 @@ tracker:
     table: jdbc_migrations
     app_name: "cassandra-demo"
     team_name: "default"
+    create_schema: "true"
+    ignore_unclean_state: "false"
 
 executor:
   source: "$HOME/dev/projects/data-pipelines/typeboot/typeboot-spec/output/cql"
@@ -26,3 +28,5 @@ executor:
       username: "cassandra"
       password: "fs:./cassandra.txt"
       dc: "dc1"
+      truststore_path: ""
+      truststore_password: ""

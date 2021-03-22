@@ -5,13 +5,16 @@ import com.typeboot.executor.spi.ScriptExecutor
 import com.typeboot.executor.spi.WrappedRow
 import com.typeboot.executor.spi.model.ProviderOptions
 import com.typeboot.executor.spi.model.ScriptStatement
+import java.lang.RuntimeException
 
 interface ScriptWatermark {
-    fun watermark(appName: String): Int
+    fun watermark(appName: String): Watermark
 }
 
+data class Watermark(val value: Int, val exception: RuntimeException? = null)
+
 class DefaultWatermarkService(private val queryExecutor: ScriptExecutor, private val providerOptions: ProviderOptions) : ScriptWatermark {
-    override fun watermark(appName: String): Int {
+    override fun watermark(appName: String): Watermark {
         val table = providerOptions.getString("table")
         val schema = providerOptions.getString("schema")
 
@@ -21,12 +24,12 @@ class DefaultWatermarkService(private val queryExecutor: ScriptExecutor, private
 
         val totalInProgress = hasIncomplete as Int
         if (totalInProgress != 0) {
-            throw ScriptExecutionException("there are $totalInProgress statement(s) already in progress for application [$appName]. cleanup required.")
+            Watermark(-1, ScriptExecutionException("there are $totalInProgress statement(s) already in progress for application [$appName]. cleanup required."))
         }
 
         val maxNumber = queryExecutor.queryForObject(ScriptStatement(1, "",
                 "select max(script_id) as max_script from $schema.$table where app_name='%s' AND status='%s'".format(appName, "DONE"))
         ) { underlying -> (underlying as WrappedRow).getInt("max_script") }
-        return maxNumber as Int
+        return Watermark(maxNumber as Int)
     }
 }
