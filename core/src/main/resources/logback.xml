@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration debug="${DEBUG:-false}">
-
-    <property name="artifact_id" value="${ARTIFACT_ID:-executor}"/>
-    <property name="group_id" value="${GROUP_ID:-com.typeboot}"/>
-    <property name="log_level" value="${LOG_LEVEL:-INFO}"/>
-
-    <contextName>${artifact_id}</contextName>
+<configuration debug="false">
+    <contextName>typeboot-executor</contextName>
     <jmxConfigurator/>
     <statusListener class="ch.qos.logback.core.status.NopStatusListener"/>
 
@@ -16,7 +11,7 @@
         </encoder>
     </appender>
 
-    <logger name="${group_id}" level="${log_level}">
+    <logger name="com.typeboot" level="INFO">
         <appender-ref ref="CONSOLE"/>
     </logger>
 

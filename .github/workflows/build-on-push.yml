@@ -28,6 +28,6 @@ jobs:
           context: ./
           file: ./Dockerfile
           push: true
-          tags: typeboot/executor:0.9
+          tags: typeboot/executor:0.10
 
 
