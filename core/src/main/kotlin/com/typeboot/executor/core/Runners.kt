@@ -1,5 +1,6 @@
 package com.typeboot.executor.core
 
+import com.typeboot.dataformat.config.JsonSupport
 import com.typeboot.dataformat.config.YamlSupport
 import com.typeboot.dataformat.scripts.FileScript
 import com.typeboot.dataformat.scripts.FileScripts
@@ -29,14 +30,15 @@ class DefaultRunner(private val instance: ScriptExecutor,
     fun run(scripts: List<FileScript>, separator: String) {
         var summary = Summary().copy(totalScripts = scripts.size)
         scripts.forEach { script ->
-            var fileContent = File(script.filePath).bufferedReader().readLines().joinToString("\n")
+            val fileContent = File(script.filePath).bufferedReader().readLines().joinToString("\n")
+            var resolvedFileContent = fileContent
             variables.forEach { (key, value) ->
                 val regexStr = "\\{\\{\\s?$key\\s?\\}\\}"
                 val variablePattern = Regex(regexStr)
-                fileContent = fileContent.replace(variablePattern, value)
+                resolvedFileContent = resolvedFileContent.replace(variablePattern, value)
             }
-            listener.beforeScriptStart(script, fileContent)
-            val statements = fileContent.split("$separator").filter { st -> st.trim().isNotEmpty() }
+            listener.beforeScriptStart(script, fileContent, variables, resolvedFileContent)
+            val statements = resolvedFileContent.split("$separator").filter { st -> st.trim().isNotEmpty() }
             LOGGER.info("event_source=runner-main, task=count-statements-in-file, file_name=${script.name}, total_statements=${statements.size}")
             statements.forEach { statement ->
                 val scriptStatement = ScriptStatement(script.serial, script.name, statement)

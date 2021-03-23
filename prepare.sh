@@ -1,5 +1,16 @@
 #!/usr/bin/env bash
 
+set -e
+
+local_refs=$(find . -name "*.yaml" -exec grep "$(whoami)" {} \; -print 2>/dev/null|wc -l)
+if [[ $local_refs -ne 0 ]];
+then
+  echo local references were found. fix them
+  find . -name "*.yaml" -exec grep "$(whoami)" {} \; -print 2>/dev/null
+  exit 1;
+fi;
+
+
 msg="$@"
 
 files=$(git status -s|wc -l)

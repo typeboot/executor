@@ -35,4 +35,5 @@ executor:
       timeout_in_seconds: "10"
       consistency: "ONE"
 
-vars: {}
+vars:
+  keyspace: customer

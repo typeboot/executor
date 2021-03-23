@@ -8,7 +8,7 @@ import java.lang.RuntimeException
 interface ExecutionEventListener {
     fun beforeAll()
 
-    fun beforeScriptStart(fileScript: FileScript, content: String)
+    fun beforeScriptStart(fileScript: FileScript, content: String, vars: Map<String, String>, resolved: String)
 
     fun beforeStatement(fileScript: FileScript, statement: ScriptStatement)
 
@@ -41,9 +41,9 @@ class WrapperExecutionListener(private val listeners: List<ExecutionEventListene
         }
     }
 
-    override fun beforeScriptStart(fileScript: FileScript, content: String) {
+    override fun beforeScriptStart(fileScript: FileScript, content: String, variables:Map<String,String>,resolved: String) {
         safeTry {
-            listeners.forEach { it.beforeScriptStart(fileScript, content) }
+            listeners.forEach { it.beforeScriptStart(fileScript, content, variables, resolved) }
         }
     }
 

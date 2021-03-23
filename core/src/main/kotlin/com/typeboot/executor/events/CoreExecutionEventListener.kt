@@ -1,5 +1,6 @@
 package com.typeboot.executor.events
 
+import com.typeboot.dataformat.config.JsonSupport
 import com.typeboot.dataformat.scripts.FileScript
 import com.typeboot.executor.core.Summary
 import com.typeboot.executor.spi.ScriptExecutor
@@ -58,11 +59,14 @@ class CoreExecutionEventListener(private val trackerExecutor: ScriptExecutor, pr
             |)""".trimMargin()))
     }
 
-    override fun beforeScriptStart(fileScript: FileScript, content: String) {
+    override fun beforeScriptStart(fileScript: FileScript, content: String, variables: Map<String, String>, resolvedContent: String) {
         val insert = createInserts(
                 table,
-                listOf("app_name", "script_id", "script_name", "batch_no", "status", "executed", "team", "statements", "content"),
-                listOf(appName, fileScript.serial, fileScript.name, batchNo, "PROGRESS", LocalDateTime.now(), team, 0, content.replace("'","''"))
+                listOf("app_name", "script_id", "script_name", "batch_no", "status", "executed", "team", "statements", "template", "vars", "content"),
+                listOf(appName, fileScript.serial, fileScript.name, batchNo, "PROGRESS", LocalDateTime.now(), team, 0,
+                        content.replace("'", "''"),
+                        JsonSupport.toJson(variables),
+                        resolvedContent.replace("'", "''"))
         )
         trackerExecutor.executeStatement(ScriptStatement(1, "", insert))
     }
