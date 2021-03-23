@@ -28,5 +28,5 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactive:1.3.7")
 
     implementation("com.datastax.oss:java-driver-core:4.10.0")
-    implementation("org.slf4j:slf4j-api:1.7.26")
+    implementation("org.slf4j:slf4j-api:1.7.30")
 }
