@@ -21,6 +21,9 @@ dependencies {
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin:2.11.3")
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.11.3")
 
+    implementation("org.slf4j:slf4j-api:1.7.26")
+    implementation("ch.qos.logback:logback-core:1.2.3")
+
     implementation("com.fasterxml.jackson.module:jackson-module-kotlin")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")

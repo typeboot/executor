@@ -8,7 +8,8 @@ tracker:
     port: "5432"
     username: "postgres"
     password: "password"
-    database: executor
+    database: "postgres"
+    schema: "executor"
     table: jdbc_migrations
     app_name: "cassandra-demo"
     team_name: "default"
@@ -26,9 +27,12 @@ executor:
       port: "9042"
       ssl: "false"
       username: "cassandra"
-      password: "fs:./cassandra.txt"
+      #password can be text or can start with fs: for file based passwords
+      password: "cassandra"
       dc: "dc1"
       truststore_path: ""
       truststore_password: ""
       timeout_in_seconds: "10"
       consistency: "ONE"
+
+vars: {}

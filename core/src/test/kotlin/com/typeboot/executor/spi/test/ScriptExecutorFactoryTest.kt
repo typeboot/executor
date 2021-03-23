@@ -5,11 +5,15 @@ import com.typeboot.executor.spi.ScriptExecutor
 import com.typeboot.executor.spi.ScriptExecutorFactory
 import com.typeboot.executor.spi.model.ProviderOptions
 import com.typeboot.executor.spi.model.ScriptStatement
+import org.slf4j.LoggerFactory
 
 class TestScriptExecutor : ScriptExecutor {
+    companion object {
+        private val LOGGER = LoggerFactory.getLogger(TestScriptExecutor::class.java)
+    }
 
     override fun executeStatement(scriptStatement: ScriptStatement): Boolean {
-        println("script statement ${scriptStatement.content}")
+        LOGGER.info("script statement ${scriptStatement.content}")
         return true
     }
 

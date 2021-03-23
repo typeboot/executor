@@ -5,12 +5,17 @@ import com.typeboot.executor.spi.ScriptExecutor
 import com.typeboot.executor.spi.WrappedRow
 import com.typeboot.executor.spi.model.ProviderOptions
 import com.typeboot.executor.spi.model.ScriptStatement
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.SQLException
 import java.util.*
 
 class JdbcExecutor(provider: ProviderOptions) : ScriptExecutor {
+    companion object {
+        val LOGGER: Logger = LoggerFactory.getLogger(JdbcExecutor::class.java)
+    }
 
 
     private var conn: Connection
@@ -28,17 +33,18 @@ class JdbcExecutor(provider: ProviderOptions) : ScriptExecutor {
         }
         Class.forName(provider.getString("driver"))
         val url = "jdbc:postgresql://$host:$port/$database"
-        println("url $url")
+        LOGGER.info("event_source=jdbc-executor, task=prepare-url, url=$url")
         this.conn = DriverManager.getConnection(url, props)
-        println("DB initialisation")
+        LOGGER.info("event_source=jdbc-executor, task=jdbc-connection, result=db-initialised")
     }
 
     override fun executeStatement(stmt: ScriptStatement): Boolean {
         with(this.conn) {
             try {
-                println("execute statement: [${stmt.content}]")
                 createStatement().execute(stmt.content)
+                LOGGER.info("""event_source=jdbc-executor, task=execute-statement, statement_no=${stmt.serialNumber}, statement="${stmt.content}", result=success""")
             } catch (se: SQLException) {
+                LOGGER.error("""event_source=jdbc-executor, task=execute-statement, statement_no=${stmt.serialNumber}, statement="${stmt.content}", result=failure""")
                 throw RuntimeException("error executing statements", se)
             }
         }
@@ -48,7 +54,7 @@ class JdbcExecutor(provider: ProviderOptions) : ScriptExecutor {
     override fun queryForObject(script: ScriptStatement, rowMapper: RowMapper): Any? {
         val stmt = this.conn.createStatement()
         with(stmt) {
-            println("executing script: ${script.content}")
+            LOGGER.info("event_source=jdbc-executor, task=query, script_no=${script.serialNumber}, statement=${script.content}")
             val rs = executeQuery(script.content)
             if (rs.next()) {
                 return rowMapper.map(WrappedRow(rs))

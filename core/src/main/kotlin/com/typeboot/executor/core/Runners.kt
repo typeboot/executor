@@ -4,10 +4,13 @@ import com.typeboot.dataformat.config.YamlSupport
 import com.typeboot.dataformat.scripts.FileScript
 import com.typeboot.dataformat.scripts.FileScripts
 import com.typeboot.exceptions.ScriptExecutionException
+import com.typeboot.executor.core.DefaultRunner.Companion.LOGGER
 import com.typeboot.executor.events.*
 import com.typeboot.executor.spi.ScriptExecutor
 import com.typeboot.executor.spi.model.ExecutorConfig
 import com.typeboot.executor.spi.model.ScriptStatement
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.regex.Pattern
 
@@ -18,6 +21,10 @@ data class Summary(val totalScripts: Int, val scripts: Int, val statements: Int,
 class DefaultRunner(private val instance: ScriptExecutor,
                     private val listener: ExecutionEventListener,
                     private val variables: Map<String, String>) {
+
+    companion object {
+        val LOGGER :Logger = LoggerFactory.getLogger(DefaultRunner::class.java)
+    }
 
     fun run(scripts: List<FileScript>, separator: String) {
         var summary = Summary().copy(totalScripts = scripts.size)
@@ -30,7 +37,7 @@ class DefaultRunner(private val instance: ScriptExecutor,
             }
             listener.beforeScriptStart(script, fileContent)
             val statements = fileContent.split("$separator").filter { st -> st.trim().isNotEmpty() }
-            println("statements ${statements.size}")
+            LOGGER.info("event_source=runner-main, task=count-statements-in-file, file_name=${script.name}, total_statements=${statements.size}")
             statements.forEach { statement ->
                 val scriptStatement = ScriptStatement(script.serial, script.name, statement)
                 listener.beforeStatement(script, scriptStatement)
@@ -77,14 +84,16 @@ class Runners {
             if (watermark.value < 0) {
                 val ignoreUncleanState = executorConfig.tracker.getString("ignore_unclean_state", "false").toBoolean()
                 if (ignoreUncleanState) {
-                    println("ignore_unclean_state is true. will retry execution by ignoring existing in PROGRESS items.")
+                    LOGGER.warn("""event_source=runner-main, task=watermark, status=success, ignore_unclean_state=${ignoreUncleanState}, message="ignore_unclean_state is true. will retry execution by ignoring existing in PROGRESS items."""")
                 } else {
-                    throw (watermark.exception?.let(::Exception) ?: RuntimeException("previous progress check failed."))
+                    val ex = (watermark.exception?.let(::Exception) ?: RuntimeException("previous progress check failed."))
+                    LOGGER.error("event_source=runner-main, task=watermark, status=failure, exception={}", ex)
+                    throw ex
                 }
             }
 
             val scriptsToRun = scripts.filter { f -> f.serial > watermark.value }
-            println("total scripts ${scripts.size}, selected for run: ${scriptsToRun.size}")
+            LOGGER.info("event_source=runner-main, task=collect-scripts, total_scripts=${scripts.size}, scripts_to_run=${scriptsToRun.size}")
             if (scriptsToRun.isNotEmpty()) {
                 val itemExecutor = Init.executorInstance(itemOptions.name, itemOptions)
                 DefaultRunner(itemExecutor, wrappedListeners, executorConfig.vars).run(scriptsToRun, itemOptions.separator)

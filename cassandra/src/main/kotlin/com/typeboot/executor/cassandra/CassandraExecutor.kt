@@ -5,20 +5,27 @@ import com.datastax.oss.driver.api.core.CqlSession
 import com.typeboot.executor.spi.RowMapper
 import com.typeboot.executor.spi.ScriptExecutor
 import com.typeboot.executor.spi.model.ScriptStatement
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import java.sql.SQLException
 import java.time.Duration
 
 class CassandraExecutor(private val cqlSession: CqlSession, private val timeout: Long, private val consistencyLevel: ConsistencyLevel) : ScriptExecutor {
 
+    companion object {
+        val LOGGER: Logger = LoggerFactory.getLogger(CassandraExecutor::class.java)
+    }
+
     override fun executeStatement(stmt: ScriptStatement): Boolean {
         with(this.cqlSession) {
             try {
-                println("execute statement: [${stmt.content}]")
                 val bounded = prepare(stmt.content).bind()
                         .setTimeout(Duration.ofSeconds(timeout))
                         .setConsistencyLevel(consistencyLevel)
                 execute(bounded)
+                LOGGER.info("""event_source=cassandra-executor, task=execute-statement, statement_no=${stmt.serialNumber}, statement="${stmt.content}", result=success """)
             } catch (se: SQLException) {
+                LOGGER.info("""event_source=cassandra-executor, task=execute-statement, statement_no=${stmt.serialNumber}, statement="${stmt.content}", result=failure""")
                 throw RuntimeException("error executing statements", se)
             }
         }
