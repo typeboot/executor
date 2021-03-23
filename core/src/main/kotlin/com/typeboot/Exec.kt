@@ -15,11 +15,11 @@ fun main(args: Array<String>) {
             ".jdbc.yaml"
         })
         val timeTaken = Duration.ofMillis(System.currentTimeMillis() - startTime).toSeconds()
-        logger.info("event_source=executor, task=run-scripts, result=success, time_taken=${timeTaken}")
+        logger.info("event_source=executor, task=run-scripts, result=success, time_taken=${timeTaken}, unit=seconds")
         exitProcess(0)
     } catch (ex: RuntimeException) {
         val timeTaken = Duration.ofMillis(System.currentTimeMillis() - startTime).toSeconds()
-        logger.error("event_source=executor, task=run-scripts, result=failure, time_taken=${timeTaken}, error={}", ex)
+        logger.error("event_source=executor, task=run-scripts, result=failure, time_taken=${timeTaken}, unit=seconds, error={}", ex)
         exitProcess(1)
     }
 }
