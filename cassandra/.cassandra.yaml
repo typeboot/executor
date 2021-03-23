@@ -25,12 +25,12 @@ executor:
     params:
       contact_points: "127.0.0.1"
       port: "9042"
-      ssl: "true"
+      ssl: "false"
       username: "cassandra"
       #password can be text or can start with fs: for file based passwords
       password: "cassandra"
       dc: "dc1"
-      truststore_path: "/Users/skhatri/dev/projects/data-pipelines/typeboot/docs/cassandra/truststore.jks"
+      truststore_path: ""
       truststore_password: "cassandra"
       timeout_in_seconds: "10"
       consistency: "ONE"
