@@ -1,7 +1,8 @@
 package com.typeboot.executor.cassandra
 
+import com.datastax.oss.driver.api.core.ConsistencyLevel
 import com.datastax.oss.driver.api.core.CqlSessionBuilder
-import com.datastax.oss.driver.api.core.ssl.SslEngineFactory
+import com.datastax.oss.driver.api.core.DefaultConsistencyLevel
 import com.typeboot.executor.spi.ScriptExecutor
 import com.typeboot.executor.spi.ScriptExecutorFactory
 import com.typeboot.executor.spi.model.ProviderOptions
@@ -9,7 +10,6 @@ import java.io.FileInputStream
 import java.net.InetSocketAddress
 import java.security.KeyStore
 import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLEngine
 import javax.net.ssl.TrustManagerFactory
 
 class CassandraExecutorFactory : ScriptExecutorFactory {
@@ -35,7 +35,9 @@ class CassandraExecutorFactory : ScriptExecutorFactory {
         } else {
             cqlSessionBuilder.build()
         }
-        return CassandraExecutor(cqlSession)
+        val timeout = provider.getString("timeout_in_seconds", "10").toLong()
+        val consistency = DefaultConsistencyLevel.valueOf(provider.getString("consistency", "ONE"))
+        return CassandraExecutor(cqlSession, timeout, consistency)
     }
 
     private fun createSslContext(truststorePath: String, truststorePassword: CharArray): SSLContext {

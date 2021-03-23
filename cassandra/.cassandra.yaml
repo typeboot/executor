@@ -24,9 +24,11 @@ executor:
     params:
       contact_points: "127.0.0.1"
       port: "9042"
-      ssl: false
+      ssl: "false"
       username: "cassandra"
       password: "fs:./cassandra.txt"
       dc: "dc1"
       truststore_path: ""
       truststore_password: ""
+      timeout_in_seconds: "10"
+      consistency: "ONE"
