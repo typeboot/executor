@@ -42,9 +42,11 @@ class JdbcExecutor(provider: ProviderOptions) : ScriptExecutor {
         with(this.conn) {
             try {
                 createStatement().execute(stmt.content)
-                LOGGER.info("""event_source=jdbc-executor, task=execute-statement, statement_no=${stmt.serialNumber}, statement="${stmt.content}", result=success""")
+                if(LOGGER.isInfoEnabled) {
+                    LOGGER.info("""event_source=jdbc-executor, task=execute-statement, statement_no=${stmt.serialNumber}, script="${stmt.name}", result=success""")
+                }
             } catch (se: SQLException) {
-                LOGGER.error("""event_source=jdbc-executor, task=execute-statement, statement_no=${stmt.serialNumber}, statement="${stmt.content}", result=failure""")
+                LOGGER.error("""event_source=jdbc-executor, task=execute-statement, statement_no=${stmt.serialNumber}, script="${stmt.name}", result=failure""")
                 throw RuntimeException("error executing statements", se)
             }
         }
@@ -54,7 +56,9 @@ class JdbcExecutor(provider: ProviderOptions) : ScriptExecutor {
     override fun queryForObject(script: ScriptStatement, rowMapper: RowMapper): Any? {
         val stmt = this.conn.createStatement()
         with(stmt) {
-            LOGGER.info("event_source=jdbc-executor, task=query, script_no=${script.serialNumber}, statement=${script.content}")
+            if (LOGGER.isDebugEnabled) {
+                LOGGER.debug("event_source=jdbc-executor, task=query, script_no=${script.serialNumber}, statement=${script.content}")
+            }
             val rs = executeQuery(script.content)
             if (rs.next()) {
                 return rowMapper.map(WrappedRow(rs))

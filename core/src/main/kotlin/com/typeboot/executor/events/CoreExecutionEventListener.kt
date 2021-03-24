@@ -27,10 +27,10 @@ class CoreExecutionEventListener(private val trackerExecutor: ScriptExecutor, pr
         }
         val createSchema = trackerOptions.getString("create_schema", "true").toBoolean()
         if (createSchema) {
-            trackerExecutor.executeStatement(ScriptStatement(1, "", "create schema if not exists $schema"))
+            trackerExecutor.executeStatement(ScriptStatement(1, "create-tracker-schema", "create schema if not exists $schema"))
         }
         trackerExecutor.executeStatement(
-                ScriptStatement(1, "", """create table if not exists $schema.$table(
+                ScriptStatement(1, "create-tracker-table", """create table if not exists $schema.$table(
                     |app_name text not null,
                     |version text,
                     |script_id int,
@@ -47,7 +47,7 @@ class CoreExecutionEventListener(private val trackerExecutor: ScriptExecutor, pr
                     |primary key(app_name, script_id, script_name, batch_no)
                     |)""".trimMargin())
         )
-        trackerExecutor.executeStatement(ScriptStatement(1, "", """create table if not exists $schema.${table}_runs(
+        trackerExecutor.executeStatement(ScriptStatement(1, "create-tracker-history-table", """create table if not exists $schema.${table}_runs(
             |app_name text not null,
             |batch_no text not null,
             |executed timestamp not null,
