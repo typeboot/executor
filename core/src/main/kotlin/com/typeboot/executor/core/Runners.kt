@@ -28,6 +28,7 @@ class DefaultRunner(private val instance: ScriptExecutor,
     }
 
     fun run(scripts: List<FileScript>, separator: String) {
+        val resultSummaryMap = emptyMap<String,Map<String,String>>().toMutableMap();
         var summary = Summary().copy(totalScripts = scripts.size)
         scripts.forEach { script ->
             val fileContent = File(script.filePath).bufferedReader().readLines().joinToString("\n")
@@ -38,27 +39,42 @@ class DefaultRunner(private val instance: ScriptExecutor,
                 resolvedFileContent = resolvedFileContent.replace(variablePattern, value)
             }
             listener.beforeScriptStart(script, fileContent, variables, resolvedFileContent)
+
             val statements = resolvedFileContent.split("$separator").filter { st -> st.trim().isNotEmpty() }
             LOGGER.info("event_source=runner-main, task=count-statements-in-file, file_name=${script.name}, total_statements=${statements.size}")
+            val statementSummaryMap = mapOf("total_statements" to statements.size.toString(), "statements_ran" to "0", "error_msg" to "" ).toMutableMap()
+            resultSummaryMap[script.name] = statementSummaryMap
+
             statements.forEach { statement ->
-                val scriptStatement = ScriptStatement(script.serial, script.name, statement)
-                listener.beforeStatement(script, scriptStatement)
-                val statementResult = instance.executeStatement(scriptStatement)
-                if (!statementResult) {
-                    summary = summary.copy(result = false)
-                    val ex = ScriptExecutionException("${script.serial} - ${script.name} failed to execute statement")
-                    listener.onAbortStatement(script, scriptStatement, ex)
-                    listener.onAbortScript(script, ex)
-                    listener.afterAll(summary)
-                    throw ex
+                try {
+                    val scriptStatement = ScriptStatement(script.serial, script.name, statement)
+                    listener.beforeStatement(script, scriptStatement)
+                    val statementResult = instance.executeStatement(scriptStatement)
+                    if (!statementResult) {
+                        summary = summary.copy(result = false)
+                        statementSummaryMap["error_msg"] = "failed to execute statement"
+                        resultSummaryMap[script.name] = statementSummaryMap
+                        val ex = ScriptExecutionException("${script.serial} - ${script.name} failed to execute statement, result_summary=${resultSummaryMap}")
+                        listener.onAbortStatement(script, scriptStatement, ex)
+                        listener.onAbortScript(script, ex)
+                        listener.afterAll(summary)
+                        throw ex
+                    }
+                    listener.afterStatement(script, scriptStatement, statementResult)
+                    statementSummaryMap["statements_ran"] = String.format(statementSummaryMap["statements_ran"]?.toInt()?.plus(1).toString())
+                    summary = summary.copy(statements = summary.statements + 1)
+                }catch (scriptException: Exception){
+                    statementSummaryMap["error_msg"] = scriptException.message.toString()
+                    resultSummaryMap[script.name] = statementSummaryMap
+                    throw RuntimeException("error executing statements, result_summary=${resultSummaryMap}", scriptException)
                 }
-                listener.afterStatement(script, scriptStatement, statementResult)
-                summary = summary.copy(statements = summary.statements + 1)
             }
             listener.afterScriptEnd(script, statements.size)
             summary = summary.copy(scripts = summary.scripts + 1)
+            resultSummaryMap[script.name] = statementSummaryMap
         }
         listener.afterAll(summary.copy(result = true))
+        LOGGER.info("event_source=runner-main, task=final-state, result_summary=${resultSummaryMap}, message=All scripts ran successfully")
     }
 }
 
@@ -100,7 +116,10 @@ class Runners {
                 val itemExecutor = Init.executorInstance(itemOptions.name, itemOptions)
                 DefaultRunner(itemExecutor, wrappedListeners, executorConfig.vars).run(scriptsToRun, itemOptions.separator)
                 itemExecutor.shutdown();
+            }else{
+                LOGGER.info("event_source=runner-main, task=collect-scripts, message=No scripts to run")
             }
+
             trackerExecutor.shutdown();
         }
     }

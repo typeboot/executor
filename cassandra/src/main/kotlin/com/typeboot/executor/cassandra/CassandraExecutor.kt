@@ -7,7 +7,6 @@ import com.typeboot.executor.spi.ScriptExecutor
 import com.typeboot.executor.spi.model.ScriptStatement
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.sql.SQLException
 import java.time.Duration
 
 class CassandraExecutor(private val cqlSession: CqlSession, private val timeout: Long, private val consistencyLevel: ConsistencyLevel) : ScriptExecutor {
@@ -23,10 +22,10 @@ class CassandraExecutor(private val cqlSession: CqlSession, private val timeout:
                         .setTimeout(Duration.ofSeconds(timeout))
                         .setConsistencyLevel(consistencyLevel)
                 execute(bounded)
-                LOGGER.info("""event_source=cassandra-executor, task=execute-statement, statement_no=${stmt.serialNumber}, statement="${stmt.content}", result=success """)
-            } catch (se: SQLException) {
-                LOGGER.info("""event_source=cassandra-executor, task=execute-statement, statement_no=${stmt.serialNumber}, statement="${stmt.content}", result=failure""")
-                throw RuntimeException("error executing statements", se)
+                LOGGER.debug("""event_source=cassandra-executor, task=execute-statement, statement_no=${stmt.serialNumber}, statement="${stmt.content}", result=success """)
+            } catch (se: Exception) {
+                LOGGER.error("""event_source=cassandra-executor, task=execute-statement, statement_no=${stmt.serialNumber}, statement="${stmt.content}", error="${se.message}", result=failure""")
+                throw RuntimeException("error executing statements, ${se.message}", se)
             }
         }
         return true
