@@ -7,7 +7,7 @@ data class FileScript(val serial: Int, val name: String, val filePath: String)
 
 class FileScripts {
     companion object {
-        private fun pattern(ext: String): Pattern = Pattern.compile("[V]?([0-9]+).*\\.$ext")
+        private fun pattern(ext: String): Pattern = Pattern.compile("^[V]?([0-9\\.]+).*\\.$ext")
 
         fun fromSource(source: String, ext: String): List<FileScript> {
             val reg = pattern(ext)
@@ -24,7 +24,7 @@ class FileScripts {
                 }
                 val matcher = reg.matcher(f.name)
                 matcher.matches()
-                val scriptNumber = matcher.toMatchResult().group(1).toInt()
+                val scriptNumber = matcher.toMatchResult().group(1).replace(".", "").toInt()
                 if (scriptCache.contains(scriptNumber)) {
                     throw RuntimeException("duplicate script number $scriptNumber in ${f.name} as it already exists.")
                 } else {
