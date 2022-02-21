@@ -23,10 +23,12 @@ class CassandraExecutor(private val cqlSession: CqlSession, private val timeout:
                         .setTimeout(Duration.ofSeconds(timeout))
                         .setConsistencyLevel(consistencyLevel)
                 execute(bounded)
-                LOGGER.info("""event_source=cassandra-executor, task=execute-statement, statement_no=${stmt.serialNumber}, statement="${stmt.content}", result=success """)
-            } catch (se: SQLException) {
-                LOGGER.info("""event_source=cassandra-executor, task=execute-statement, statement_no=${stmt.serialNumber}, statement="${stmt.content}", result=failure""")
-                throw RuntimeException("error executing statements", se)
+                if (LOGGER.isDebugEnabled) {
+                    LOGGER.debug("""event_source=cassandra-executor, task=execute-statement, statement_no=${stmt.serialNumber}, statement="${stmt.content}", result=success """)
+                }
+            } catch (se: Exception) {
+                LOGGER.error("""event_source=cassandra-executor, task=execute-statement, statement_no=${stmt.serialNumber}, statement="${stmt.content}", error="${se.message}", result=failure""")
+                throw RuntimeException("error executing statements, ${se.message}", se)
             }
         }
         return true
