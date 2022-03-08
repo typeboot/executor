@@ -42,7 +42,6 @@ class DefaultRunner(private val instance: ScriptExecutor,
             val statements = resolvedFileContent.split(splitter).filter { st -> st.trim().isNotEmpty() }
             LOGGER.info("event_source=runner-main, task=count-statements-in-file, file_name=${script.name}, total_statements=${statements.size}")
             statements.forEach { statement ->
-                println("statement [ $statement ]")
                 val scriptStatement = ScriptStatement(script.serial, script.name, statement)
                 listener.beforeStatement(script, scriptStatement)
                 val statementResult = instance.executeStatement(scriptStatement)
