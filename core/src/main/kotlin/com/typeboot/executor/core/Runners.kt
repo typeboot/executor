@@ -38,9 +38,11 @@ class DefaultRunner(private val instance: ScriptExecutor,
                 resolvedFileContent = resolvedFileContent.replace(variablePattern, value)
             }
             listener.beforeScriptStart(script, fileContent, variables, resolvedFileContent)
-            val statements = resolvedFileContent.split("$separator").filter { st -> st.trim().isNotEmpty() }
+            val splitter = "${separator}\\r?\\n".toRegex()
+            val statements = resolvedFileContent.split(splitter).filter { st -> st.trim().isNotEmpty() }
             LOGGER.info("event_source=runner-main, task=count-statements-in-file, file_name=${script.name}, total_statements=${statements.size}")
             statements.forEach { statement ->
+                println("statement [ $statement ]")
                 val scriptStatement = ScriptStatement(script.serial, script.name, statement)
                 listener.beforeStatement(script, scriptStatement)
                 val statementResult = instance.executeStatement(scriptStatement)
@@ -81,6 +83,7 @@ class Runners {
             val itemOptions = executorConfig.executor.provider
             val source = executorConfig.executor.source.replace("\$HOME", System.getProperty("user.home"), true)
             val scripts = FileScripts.fromSource(source, itemOptions.extension)
+            LOGGER.info("""source="$source", provider="${itemOptions.name}", task="gather-scripts", total_scripts=${scripts.size}""")
 
             val watermark = DefaultWatermarkService(trackerExecutor, trackerOptions).watermark(trackerOptions.getString("app_name"))
             if (watermark.value < 0) {
