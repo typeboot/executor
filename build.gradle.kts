@@ -1,5 +1,5 @@
 tasks.wrapper {
-    gradleVersion = "6.2.2"
+    gradleVersion = "7.4.2"
 }
 
 allprojects {
@@ -29,6 +29,7 @@ subprojects {
         from(project.configurations["runtimeClasspath"].files.map{  zipTree(it)})
         from(project.the<SourceSetContainer>()["main"].output)
         archiveClassifier.set("uber")
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
 
     artifacts {
@@ -36,3 +37,4 @@ subprojects {
         add("archives", fatJar)
     }
 }
+
