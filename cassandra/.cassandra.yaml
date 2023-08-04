@@ -20,7 +20,7 @@ executor:
   source: "$HOME/dev/projects/data-pipelines/typeboot/typeboot-spec/output/cql"
   provider:
     name: cassandra
-    extension: "cql"
+    extension: "cql.j2"
     separator: ";"
     params:
       contact_points: "127.0.0.1"

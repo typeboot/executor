@@ -1,1 +1,2 @@
 com.typeboot.executor.jdbc.JdbcScriptExecutorFactory
+com.typeboot.executor.cassandra.CassandraExecutorFactory
